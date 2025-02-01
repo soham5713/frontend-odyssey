@@ -20,6 +20,7 @@ import FeedbackAndIssues from "./pages/Feedback"
 import Expenses from "./pages/Expenses"
 import MealSchedule from "./pages/MealSchedules"
 import { Home } from "./pages/Home"
+import { Favorites } from "./pages/Favorites"
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -164,6 +165,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Home />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user-favorites"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Favorites />
                     </AppLayout>
                   </ProtectedRoute>
                 }
