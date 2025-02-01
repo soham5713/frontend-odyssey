@@ -29,7 +29,7 @@ export function Login() {
         await setDoc(userRef, {
           name: user.displayName,
           email: user.email,
-          role: "student", // Set default role to student
+          role: "admin", // Set default role to student
           balance: 0, // Initialize balance to 0
           createdAt: new Date().toISOString(),
         })

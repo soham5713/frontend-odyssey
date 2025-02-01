@@ -18,6 +18,7 @@ import React from 'react'
 import "./globals.css"
 import FeedbackAndIssues from "./pages/Feedback"
 import Expenses from "./pages/Expenses"
+import MealSchedule from "./pages/MealSchedules"
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -144,6 +145,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/staff-meal-schedule"
+                element={
+                  <ProtectedRoute staffOnly>
+                    <AppLayout>
+                      <MealSchedule />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Student Routes */}
               <Route
@@ -152,6 +163,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Dashboard />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user-meal-schedule"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <MealSchedule />
                     </AppLayout>
                   </ProtectedRoute>
                 }
