@@ -19,6 +19,7 @@ import "./globals.css"
 import FeedbackAndIssues from "./pages/Feedback"
 import Expenses from "./pages/Expenses"
 import MealSchedule from "./pages/MealSchedules"
+import { Home } from "./pages/Home"
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -162,7 +163,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Dashboard />
+                      <Home />
                     </AppLayout>
                   </ProtectedRoute>
                 }
