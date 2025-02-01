@@ -18,7 +18,7 @@ export function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Welcome to Smart Mess</h1>
+      <h1 className="text-3xl font-bold">Welcome to Bhookh Lagg Gayi</h1>
       <p className="text-lg">Your current role: <strong>{currentUser?.role || 'Not set'}</strong></p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {dashboardItems.map((item, index) => (

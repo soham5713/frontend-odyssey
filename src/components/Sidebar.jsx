@@ -13,7 +13,6 @@ const getMenuItems = (role) => {
       return [
         ...commonItems,
         { icon: UtensilsCrossed, label: "Menu", href: "/user-menu" },
-        { icon: Coffee, label: "Restaurants", href: "/user-restaurants" },
         { icon: ShoppingCart, label: "Order Food", href: "/user-order" },
         { icon: ClipboardList, label: "Feedback", href: "/user-feedback" },
       ]
@@ -42,7 +41,7 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-card text-card-foreground h-screen flex flex-col">
       <div className="p-4 border-b">
-        <h1 className="text-2xl font-bold">Smart Mess</h1>
+        <h1 className="text-2xl font-bold">Bhookh Lagg Gayi</h1>
       </div>
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-1 p-2">

@@ -7,7 +7,6 @@ import RoleSetup from "./pages/RoleSetup"
 import { MessStaffDashboard } from "./pages/MessStaffDashboard"
 import { AdminDashboard } from "./pages/AdminDashboard"
 import { Recipes } from "./pages/Menu"
-import { Restaurants } from "./pages/Restaurants"
 import { OrderFood } from "./pages/OrderFood"
 import { Dashboard } from "./pages/Dashboard"
 import { ManageOrders } from "./pages/ManageOrders"
@@ -162,16 +161,6 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Recipes />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/user-restaurants"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Restaurants />
                     </AppLayout>
                   </ProtectedRoute>
                 }
