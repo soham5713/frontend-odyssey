@@ -1,116 +1,233 @@
-import { useState, useEffect } from "react"
-import { useAuth } from "../contexts/AuthContext"
-import { db } from "../firebase/config"
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { LineChart, BarChart, PieChart } from "@/components/ui/chart"
+import { format, subDays, startOfMonth, eachDayOfInterval, isWithinInterval, subMonths } from "date-fns"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-export function Expenses() {
-  const [expenses, setExpenses] = useState([])
-  const [newExpense, setNewExpense] = useState({ description: "", amount: "" })
-  const { currentUser } = useAuth()
+const categories = ["Mess Food", "Canteen", "Restaurant", "Snacks", "Beverages"]
 
-  useEffect(() => {
-    fetchExpenses()
-  }, []) // Removed currentUser dependency
+const timeRanges = [
+  { label: "This Month", value: "thisMonth" },
+  { label: "Last 30 Days", value: "last30Days" },
+  { label: "Last 3 Months", value: "last3Months" },
+  { label: "This Year", value: "thisYear" },
+]
 
-  const fetchExpenses = async () => {
-    if (!currentUser) return
+// Generate dummy data for the past year
+const generateDummyData = () => {
+  const data = []
+  const startDate = subMonths(new Date(), 12) // Start from 12 months ago
+  const endDate = new Date()
 
-    const q = query(collection(db, "expenses"), where("userId", "==", currentUser.uid))
+  for (let date = startDate; date <= endDate; date = new Date(date.setDate(date.getDate() + 1))) {
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)]
+    const randomAmount = Math.floor(Math.random() * 200) + 10 // Random amount between 10 and 210
 
-    try {
-      const querySnapshot = await getDocs(q)
-      const expensesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-      setExpenses(expensesData)
-    } catch (error) {
-      console.error("Error fetching expenses:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch expenses. Please try again.",
-        variant: "destructive",
+    data.push({
+      id: date.getTime(),
+      description: `${randomCategory} purchase`,
+      amount: randomAmount,
+      category: randomCategory,
+      date: new Date(date),
+    })
+
+    // Add some days with multiple expenses
+    if (Math.random() > 0.7) {
+      const secondCategory = categories[Math.floor(Math.random() * categories.length)]
+      const secondAmount = Math.floor(Math.random() * 100) + 10
+
+      data.push({
+        id: date.getTime() + 1,
+        description: `${secondCategory} purchase`,
+        amount: secondAmount,
+        category: secondCategory,
+        date: new Date(date),
       })
     }
   }
 
-  const handleAddExpense = async (e) => {
-    e.preventDefault()
-    if (!currentUser) return
+  return data
+}
 
-    try {
-      await addDoc(collection(db, "expenses"), {
-        userId: currentUser.uid,
-        description: newExpense.description,
-        amount: Number.parseFloat(newExpense.amount),
-        createdAt: serverTimestamp(),
-      })
+const dummyExpenses = generateDummyData()
 
-      setNewExpense({ description: "", amount: "" })
-      fetchExpenses()
-      toast({
-        title: "Success",
-        description: "Expense added successfully!",
-      })
-    } catch (error) {
-      console.error("Error adding expense:", error)
-      toast({
-        title: "Error",
-        description: "Failed to add expense. Please try again.",
-        variant: "destructive",
-      })
-    }
+export function Expenses() {
+  const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth")
+
+  const filteredExpenses = useMemo(() => {
+    const now = new Date()
+    const startDate = (() => {
+      switch (selectedTimeRange) {
+        case "thisMonth":
+          return startOfMonth(now)
+        case "last30Days":
+          return subDays(now, 29)
+        case "last3Months":
+          return subMonths(now, 3)
+        case "thisYear":
+          return new Date(now.getFullYear(), 0, 1)
+        default:
+          return startOfMonth(now)
+      }
+    })()
+    const endDate = now
+
+    return dummyExpenses.filter((expense) => isWithinInterval(expense.date, { start: startDate, end: endDate }))
+  }, [selectedTimeRange])
+
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+  const expensesByCategory = useMemo(
+    () =>
+      categories.map((category) => ({
+        category,
+        amount: filteredExpenses
+          .filter((expense) => expense.category === category)
+          .reduce((sum, expense) => sum + expense.amount, 0),
+      })),
+    [filteredExpenses],
+  )
+
+  const dailyExpenses = useMemo(() => {
+    const days = eachDayOfInterval({
+      start: subDays(new Date(), 29),
+      end: new Date(),
+    })
+    return days.map((date) => ({
+      date,
+      amount: filteredExpenses
+        .filter((expense) => expense.date.toDateString() === date.toDateString())
+        .reduce((sum, expense) => sum + expense.amount, 0),
+    }))
+  }, [filteredExpenses])
+
+  const lineChartData = {
+    labels: dailyExpenses.map((item) => format(item.date, "MMM d")),
+    datasets: [
+      {
+        label: "Daily Food Expenses",
+        data: dailyExpenses.map((item) => item.amount),
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1,
+      },
+    ],
+  }
+
+  const barChartData = {
+    labels: categories,
+    datasets: [
+      {
+        label: "Food Expenses by Category",
+        data: expensesByCategory.map((item) => item.amount),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+        ],
+      },
+    ],
+  }
+
+  const pieChartData = {
+    labels: categories,
+    datasets: [
+      {
+        data: expensesByCategory.map((item) => item.amount),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+          "rgba(153, 102, 255, 0.6)",
+        ],
+      },
+    ],
   }
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Expenses</h1>
+      <h1 className="text-3xl font-bold">Food Expenses</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>Add New Expense</CardTitle>
+          <CardTitle>Expense Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddExpense} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Description"
-              value={newExpense.description}
-              onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Amount"
-              value={newExpense.amount}
-              onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-              required
-            />
-            <Button type="submit">Add Expense</Button>
-          </form>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <p className="text-lg font-semibold">Total Food Expenses:</p>
+              <p className="text-2xl font-bold">₹{totalExpenses.toFixed(2)}</p>
+            </div>
+            <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeRanges.map((range) => (
+                  <SelectItem key={range.value} value={range.value}>
+                    {range.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Tabs defaultValue="line">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="line">Trend</TabsTrigger>
+              <TabsTrigger value="bar">Categories</TabsTrigger>
+              <TabsTrigger value="pie">Distribution</TabsTrigger>
+            </TabsList>
+            <TabsContent value="line">
+              <div className="h-[300px]">
+                <LineChart data={lineChartData} />
+              </div>
+            </TabsContent>
+            <TabsContent value="bar">
+              <div className="h-[300px]">
+                <BarChart data={barChartData} />
+              </div>
+            </TabsContent>
+            <TabsContent value="pie">
+              <div className="h-[300px]">
+                <PieChart data={pieChartData} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Expense History</CardTitle>
+          <CardTitle>Food Purchase History</CardTitle>
         </CardHeader>
         <CardContent>
-          {expenses.length > 0 ? (
-            <ul className="space-y-2">
-              {expenses.map((expense) => (
-                <li key={expense.id} className="flex justify-between items-center">
-                  <span>{expense.description}</span>
-                  <span className="font-semibold">₹{expense.amount.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
+          {filteredExpenses.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenses.slice(0, 10).map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>{format(expense.date, "MMM d, yyyy")}</TableCell>
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell className="text-right">₹{expense.amount.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
-            <p className="text-muted-foreground">No expenses recorded yet.</p>
+            <p className="text-muted-foreground">No food expenses recorded for the selected time range.</p>
           )}
         </CardContent>
       </Card>

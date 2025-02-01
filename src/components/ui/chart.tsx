@@ -3,6 +3,20 @@ import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
+import { Line, Bar, Pie } from "react-chartjs-2"
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  ArcElement,
+} from "chart.js"
+
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
 
@@ -361,3 +375,7 @@ export {
   ChartLegendContent,
   ChartStyle,
 }
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement)
+export const LineChart = ({ data, options }) => <Line data={data} options={options} />
+export const BarChart = ({ data, options }) => <Bar data={data} options={options} />
+export const PieChart = ({ data, options }) => <Pie data={data} options={options} />
