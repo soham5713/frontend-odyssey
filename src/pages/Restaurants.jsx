@@ -1,4 +1,5 @@
 import { Search, MapPin, Phone } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 const restaurants = [
   { name: "Spice Paradise", rating: 4.5, cuisine: "Indian", address: "123 Spice St", phone: "(555) 123-4567" },
@@ -13,11 +14,7 @@ export function Restaurants() {
       <h1 className="text-4xl font-bold">Restaurants</h1>
 
       <div className="relative">
-        <input
-          type="text"
-          placeholder="Search for restaurants..."
-          className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-background"
-        />
+        <Input type="text" placeholder="Search for restaurants..." className="w-full pl-10 pr-4" />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
       </div>
 

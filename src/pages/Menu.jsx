@@ -1,7 +1,7 @@
-import { Search } from "lucide-react"
+import { Search } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
@@ -143,3 +143,4 @@ export function Recipes() {
   )
 }
 
+export default Recipes

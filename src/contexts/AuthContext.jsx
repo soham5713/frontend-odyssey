@@ -1,76 +1,49 @@
-import { createContext, useContext, useState, useEffect } from "react"
-import { auth, db, googleProvider } from "../firebase/config"
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { auth, db } from "../firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
 
-const AuthContext = createContext()
+// Create the AuthContext
+export const AuthContext = createContext();
 
-export function useAuth() {
-  return useContext(AuthContext)
-}
-
+// Create the AuthProvider component
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  async function signInWithGoogle() {
-    try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
-
-      // Check if the user document exists in Firestore
-      const userDocRef = doc(db, "users", user.uid)
-      const userDoc = await getDoc(userDocRef)
-
-      if (!userDoc.exists()) {
-        // If the user document doesn't exist, create a new one
-        await setDoc(userDocRef, {
-          name: user.displayName,
-          email: user.email,
-          role: "student", // Default role
-          balance: 0, // Initial balance
-        })
-      }
-
-      // Fetch the user data and update the currentUser state
-      const updatedUserDoc = await getDoc(userDocRef)
-      const userData = updatedUserDoc.data()
-      setCurrentUser({ ...user, role: userData.role, balance: userData.balance })
-
-      return user
-    } catch (error) {
-      console.error("Error signing in with Google", error)
-      throw error
-    }
-  }
-
-  function logout() {
-    return signOut(auth)
-  }
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDocRef = doc(db, "users", user.uid)
-        const userDoc = await getDoc(userDocRef)
-        const userData = userDoc.data()
-        setCurrentUser({ ...user, role: userData.role, balance: userData.balance })
+        const userRef = doc(db, "users", user.uid);
+        const unsubscribeUser = onSnapshot(userRef, (doc) => {
+          if (doc.exists()) {
+            setCurrentUser({ ...user, ...doc.data() });
+          } else {
+            setCurrentUser(user);
+          }
+          setLoading(false);
+        });
+
+        return () => unsubscribeUser();
       } else {
-        setCurrentUser(null)
+        setCurrentUser(null);
+        setLoading(false);
       }
-      setLoading(false)
-    })
+    });
 
-    return unsubscribe
-  }, [])
+    return unsubscribe;
+  }, []);
 
-  const value = {
-    currentUser,
-    loading,
-    signInWithGoogle,
-    logout,
-  }
+  const value = { currentUser, setCurrentUser, loading };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 }
 
+// Create a custom hook to use the AuthContext
+export function useAuth() {
+  return useContext(AuthContext);
+}

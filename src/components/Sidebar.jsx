@@ -1,23 +1,48 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, UtensilsCrossed, Coffee, ShoppingCart, Heart, Settings } from "lucide-react"
-import { ThemeSwitcher } from "./ThemeSwitcher"
+import { Home, UtensilsCrossed, Coffee, ShoppingCart, ClipboardList, UserCog } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext"
 
-const menuItems = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: UtensilsCrossed, label: "Menu", href: "/recipes" },
-  { icon: Coffee, label: "Restaurants", href: "/restaurants" },
-  { icon: ShoppingCart, label: "Order Food", href: "/order" },
-  { icon: Heart, label: "Favorites", href: "/favorites" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-]
+const getMenuItems = (role) => {
+  const commonItems = [
+    { icon: Home, label: "Home", href: "/" },
+    { icon: UserCog, label: "Change Role", href: "/role-setup" },
+  ]
+
+  switch (role) {
+    case "student":
+      return [
+        ...commonItems,
+        { icon: UtensilsCrossed, label: "Menu", href: "/user-menu" },
+        { icon: Coffee, label: "Restaurants", href: "/user-restaurants" },
+        { icon: ShoppingCart, label: "Order Food", href: "/user-order" },
+        { icon: ClipboardList, label: "Feedback", href: "/user-feedback" },
+      ]
+    case "mess_staff":
+      return [
+        ...commonItems,
+        { icon: ClipboardList, label: "Manage Orders", href: "/staff-orders" },
+        { icon: UtensilsCrossed, label: "Manage Menu", href: "/staff-menu" },
+      ]
+    case "admin":
+      return [
+        ...commonItems,
+        { icon: ClipboardList, label: "Manage Users", href: "/admin-users" },
+        { icon: UtensilsCrossed, label: "Manage Menu", href: "/admin-menu" },
+      ]
+    default:
+      return commonItems
+  }
+}
 
 export function Sidebar() {
   const location = useLocation()
+  const { currentUser } = useAuth()
+  const menuItems = getMenuItems(currentUser?.role)
 
   return (
-    <div className="w-64 bg-card text-card-foreground h-full flex flex-col">
+    <div className="w-64 bg-card text-card-foreground h-screen flex flex-col">
       <div className="p-4 border-b">
-        <h1 className="text-2xl font-bold">Bhookh Lagg Gayi</h1>
+        <h1 className="text-2xl font-bold">Smart Mess</h1>
       </div>
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-1 p-2">
@@ -36,9 +61,6 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
-      <div className="p-4 border-t">
-        <ThemeSwitcher />
-      </div>
     </div>
   )
 }

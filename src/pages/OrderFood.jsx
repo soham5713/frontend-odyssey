@@ -1,178 +1,116 @@
-import { useState, useEffect } from "react"
-import { Heart, Plus, Minus, ShoppingCart, Search } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import { Search, ShoppingCart } from 'lucide-react'
 import { Input } from "@/components/ui/input"
-import { toast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button"
 
-const foodImages = {
-  "Butter Chicken": "/placeholder.svg?height=200&width=300",
-  "Paneer Tikka": "/placeholder.svg?height=200&width=300",
-  "Vegetable Biryani": "/placeholder.svg?height=200&width=300",
-  "Masala Dosa": "/placeholder.svg?height=200&width=300",
-  "Chicken Tikka": "/placeholder.svg?height=200&width=300",
-  "Palak Paneer": "/placeholder.svg?height=200&width=300",
-}
+const everydayItems = [
+  {
+    name: "Vada Pav",
+    time: "5 mins",
+    price: "₹15",
+    image: "https://b.zmtcdn.com/data/dish_photos/d30/abcfc93246fc0abe8641acaf14879d30.jpg?output-format=webp",
+  },
+  {
+    name: "Samosa Pav",
+    time: "10 mins",
+    price: "₹15",
+    image: "https://b.zmtcdn.com/data/dish_photos/1d7/0c1d8db0c53d279758a65c17d2e8c1d7.jpg",
+  },
+  {
+    name: "Tea",
+    time: "5 mins",
+    price: "₹10",
+    image:
+      "https://b.zmtcdn.com/data/pictures/0/21189690/cc1a494668bfccf9d82f88a91eb94c7c_o2_featured_v2.jpg?output-format=webp",
+  },
+  {
+    name: "Coffee",
+    time: "5 mins",
+    price: "₹15",
+    image: "https://b.zmtcdn.com/data/dish_photos/a13/836939e026f69be6c0a81d7999d57a13.jpg?output-format=webp",
+  },
+  {
+    name: "Bun Maska",
+    time: "2 mins",
+    price: "₹20",
+    image: "https://b.zmtcdn.com/data/dish_photos/60d/6df9831370c35b54be33f00b3daf660d.jpg?output-format=webp",
+  },
+  {
+    name: "Misal Pav",
+    time: "15 mins",
+    price: "₹40",
+    image: "https://b.zmtcdn.com/data/dish_photos/553/15effdb964f5e5ce565c36df1d73a553.jpg?output-format=webp",
+  },
+]
 
-const restaurants = {
-  "Butter Chicken": "Spice Paradise",
-  "Paneer Tikka": "Curry House",
-  "Vegetable Biryani": "Tandoori Nights",
-  "Masala Dosa": "Dosa Delight",
-  "Chicken Tikka": "Spice Paradise",
-  "Palak Paneer": "Tandoori Nights",
-}
+const otherItems = [
+  {
+    name: "Dosa",
+    time: "20 mins",
+    price: "₹40",
+    image:
+      "https://b.zmtcdn.com/data/pictures/6/32026/3aa9879441c7be23eaeaf9f261e7b098_o2_featured_v2.jpg?output-format=webp",
+  },
+  {
+    name: "Paneer Paratha",
+    time: "15 mins",
+    price: "₹60",
+    image: "https://b.zmtcdn.com/data/dish_photos/19b/16f32aa3c5d84448f79ec4150b9aa19b.jpeg?output-format=webp",
+  },
+  {
+    name: "Idli",
+    time: "10 mins",
+    price: "₹30",
+    image: "https://b.zmtcdn.com/data/dish_photos/148/a90afd3d116ef0160dc48faca7217148.png?output-format=webp",
+  },
+  {
+    name: "Omelette",
+    time: "20 mins",
+    price: "₹40",
+    image: "https://b.zmtcdn.com/data/dish_photos/090/66a3ae54a04af0ddf78070f7061fc090.jpg?output-format=webp",
+  },
+]
 
-const prices = {
-  "Butter Chicken": 12.99,
-  "Paneer Tikka": 9.99,
-  "Vegetable Biryani": 10.99,
-  "Masala Dosa": 8.99,
-  "Chicken Tikka": 13.99,
-  "Palak Paneer": 11.99,
-}
+const allItems = [...everydayItems, ...otherItems]
 
-export function FoodGrid() {
-  const [favorites, setFavorites] = useState([])
-  const [cart, setCart] = useState({})
-  const [searchQuery, setSearchQuery] = useState("")
-  const [dishes, setDishes] = useState(Object.keys(foodImages))
-
-  useEffect(() => {
-    const storedFavorites = localStorage.getItem("favorites")
-    const storedCart = localStorage.getItem("cart")
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites))
-    }
-    if (storedCart) {
-      setCart(JSON.parse(storedCart))
-    }
-  }, [])
-
-  useEffect(() => {
-    const filtered = Object.keys(foodImages).filter(
-      (dish) =>
-        dish.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        restaurants[dish].toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    setDishes(filtered)
-  }, [searchQuery])
-
-  const toggleFavorite = (dish) => {
-    const newFavorites = favorites.includes(dish) ? favorites.filter((fav) => fav !== dish) : [...favorites, dish]
-    setFavorites(newFavorites)
-    localStorage.setItem("favorites", JSON.stringify(newFavorites))
-    toast({
-      title: favorites.includes(dish) ? "Removed from favorites" : "Added to favorites",
-      description: dish,
-    })
-  }
-
-  const updateCart = (dish, increment) => {
-    const currentQuantity = cart[dish] || 0
-    const newQuantity = increment ? currentQuantity + 1 : Math.max(0, currentQuantity - 1)
-
-    const newCart = {
-      ...cart,
-      [dish]: newQuantity,
-    }
-
-    if (newQuantity === 0) {
-      delete newCart[dish]
-    }
-
-    setCart(newCart)
-    localStorage.setItem("cart", JSON.stringify(newCart))
-  }
-
+export function OrderFood() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search for dishes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+    <div className="max-w-6xl mx-auto p-4 space-y-8 text-gray-900 dark:text-gray-100">
+      <h1 className="text-4xl font-bold">Order Food</h1>
+
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Search for dishes..."
+          className="w-full pl-10 pr-4"
+        />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {allItems.map((item) => (
+          <div key={item.name} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
+            <div className="relative pt-[56.25%]">
+              <img
+                src={item.image || "/placeholder.svg"}
+                alt={item.name}
+                className="absolute top-0 left-0 w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-4 flex-grow flex flex-col justify-between">
+              <div>
+                <h3 className="font-medium text-lg">{item.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ready in: {item.time}</p>
+              </div>
+              <div className="flex justify-between items-center mt-4">
+                <p className="text-lg font-semibold">{item.price}</p>
+                <Button size="icon" variant="ghost">
+                  <ShoppingCart className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            <span>{Object.values(cart).reduce((a, b) => a + b, 0)}</span>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {dishes.map((dish) => (
-              <motion.div
-                key={dish}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="group relative bg-card rounded-lg overflow-hidden border shadow-sm"
-              >
-                <div className="relative aspect-[3/2] overflow-hidden">
-                  <img
-                    src={foodImages[dish] || "/placeholder.svg"}
-                    alt={dish}
-                    className="object-cover w-full h-full transition-transform group-hover:scale-105"
-                  />
-                  <button
-                    onClick={() => toggleFavorite(dish)}
-                    className="absolute top-2 right-2 p-2 rounded-full bg-background/80 backdrop-blur-sm transition-colors hover:bg-background"
-                  >
-                    <Heart
-                      className={`h-5 w-5 ${
-                        favorites.includes(dish) ? "fill-red-500 text-red-500" : "text-foreground"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-lg">{dish}</h3>
-                      <p className="text-sm text-muted-foreground">{restaurants[dish]}</p>
-                    </div>
-                    <p className="font-semibold">${prices[dish]}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateCart(dish, false)}
-                        disabled={!cart[dish]}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-8 text-center">{cart[dish] || 0}</span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateCart(dish, true)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Button
-                      variant={cart[dish] ? "secondary" : "default"}
-                      size="sm"
-                      onClick={() => updateCart(dish, true)}
-                    >
-                      {cart[dish] ? "Update Cart" : "Add to Cart"}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+        ))}
       </div>
     </div>
   )
 }
-
