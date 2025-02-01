@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
-import { Search, ShoppingCart, Plus, Minus } from "lucide-react"
+import { Search, ShoppingCart } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Cart } from "../components/Cart"
+import { DigitalMessCard } from "../components/DigitalMessCard"
 
 const everydayItems = [
   {
@@ -128,6 +128,10 @@ export function OrderFood() {
     })
   }
 
+  const clearCart = () => {
+    setCart({})
+  }
+
   const cartItems = Object.keys(cart).map((id) => {
     const item = allItems.find((item) => item.id === Number.parseInt(id))
     return { ...item, quantity: cart[id] }
@@ -139,95 +143,119 @@ export function OrderFood() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold">Order Food</h1>
-        <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <Badge variant="destructive" className="absolute -top-2 -right-2">
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Your Cart</SheetTitle>
-            </SheetHeader>
-            <ScrollArea className="h-[calc(100vh-10rem)] mt-4">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center py-2">
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-500">
-                      ₹{item.price} x {item.quantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button size="icon" variant="outline" onClick={() => removeFromCart(item)}>
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span>{item.quantity}</span>
-                    <Button size="icon" variant="outline" onClick={() => addToCart(item)}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </ScrollArea>
-            <div className="mt-4">
-              <p className="text-lg font-semibold">Total: ₹{totalAmount}</p>
-              <Button className="w-full mt-4">Checkout</Button>
+      <div className="flex justify-between items-start">
+        <div className="space-y-8 flex-1">
+          <div className="flex justify-between items-center">
+            <h1 className="text-4xl font-bold">Order Food</h1>
+            <div>
+              <Button variant="outline" size="icon" className="relative" onClick={() => setIsCartOpen(!isCartOpen)}>
+                <ShoppingCart className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -right-2">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Button>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search for dishes..."
+              className="w-full pl-10 pr-4"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Today's Special</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Get 20% off on all items between 2 PM - 5 PM</p>
+              </CardContent>
+            </Card>
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Quick Bites</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Ready in under 10 minutes</p>
+              </CardContent>
+            </Card>
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Meal Combos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Save up to ₹50 on combos</p>
+              </CardContent>
+            </Card>
+          </div>
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="everyday">Everyday</TabsTrigger>
+              <TabsTrigger value="other">Other</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems.map((item) => (
+                  <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
+                ))}
+              </div>
+            </TabsContent>
+            <TabsContent value="everyday">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems
+                  .filter((item) => item.category === "Everyday")
+                  .map((item) => (
+                    <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
+                  ))}
+              </div>
+            </TabsContent>
+            <TabsContent value="other">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems
+                  .filter((item) => item.category === "Other")
+                  .map((item) => (
+                    <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
+                  ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+        <div className="w-80 ml-8">
+          <DigitalMessCard />
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start">
+                View Order History
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                Recharge Balance
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                Support
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      <div className="relative">
-        <Input
-          type="text"
-          placeholder="Search for dishes..."
-          className="w-full pl-10 pr-4"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-      </div>
-
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="everyday">Everyday</TabsTrigger>
-          <TabsTrigger value="other">Other</TabsTrigger>
-        </TabsList>
-        <TabsContent value="all">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item) => (
-              <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="everyday">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems
-              .filter((item) => item.category === "Everyday")
-              .map((item) => (
-                <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
-              ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="other">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems
-              .filter((item) => item.category === "Other")
-              .map((item) => (
-                <FoodCard key={item.id} item={item} onAddToCart={addToCart} />
-              ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <Cart
+        isOpen={isCartOpen}
+        onOpenChange={setIsCartOpen}
+        items={cartItems}
+        totalAmount={totalAmount}
+        onAddItem={addToCart}
+        onRemoveItem={removeFromCart}
+        onClearCart={clearCart}
+      />
     </div>
   )
 }
@@ -259,4 +287,3 @@ function FoodCard({ item, onAddToCart }) {
 }
 
 export default OrderFood
-
