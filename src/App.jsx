@@ -17,7 +17,6 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-function App() {
   return (
     <Router>
       <AuthProvider>
