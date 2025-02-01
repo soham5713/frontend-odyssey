@@ -23,7 +23,7 @@ const getMenuItems = (role) => {
           ...commonItems,
           { icon: ClipboardList, label: "Manage Orders", href: "/staff-orders" },
           { icon: UtensilsCrossed, label: "Manage Menu", href: "/staff-menu" },
-          { icon: Calendar, label: "Meal Schedule", href: "/admin-meal-schedule" },
+          // { icon: Calendar, label: "Meal Schedule", href: "/admin-meal-schedule" },
         ]
     default:
       return commonItems
