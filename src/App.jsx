@@ -8,7 +8,6 @@ import { MessStaffDashboard } from "./pages/MessStaffDashboard"
 import { AdminDashboard } from "./pages/AdminDashboard"
 import { Recipes } from "./pages/Menu"
 import { OrderFood } from "./pages/OrderFood"
-import { Dashboard } from "./pages/Dashboard"
 import { ManageOrders } from "./pages/ManageOrders"
 import { ManageMenu } from "./pages/ManageMenu"
 import React from 'react'

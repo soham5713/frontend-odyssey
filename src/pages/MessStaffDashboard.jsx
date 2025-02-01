@@ -1,39 +1,47 @@
 import { useState, useEffect } from "react"
-import { db } from "../firebase/config"
-import { collection, addDoc, query, onSnapshot, updateDoc, doc, serverTimestamp } from "firebase/firestore"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { db } from "../firebase/config"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
 
 export function MessStaffDashboard() {
-  const [menuItems, setMenuItems] = useState([])
   const [newItem, setNewItem] = useState({ name: "", price: "" })
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [schedule, setSchedule] = useState({})
+  const [newScheduleItem, setNewScheduleItem] = useState({ day: "", type: "", menu: "" })
+
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  const mealTypes = ["Breakfast", "Lunch", "Dinner"]
 
   useEffect(() => {
-    const menuRef = collection(db, "menu")
-    const ordersRef = collection(db, "orders")
-
-    const unsubscribeMenu = onSnapshot(query(menuRef), (snapshot) => {
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      setMenuItems(items)
-    })
-
-    const unsubscribeOrders = onSnapshot(query(ordersRef), (snapshot) => {
-      const orderData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      setOrders(orderData)
-      setLoading(false)
-    })
-
-    return () => {
-      unsubscribeMenu()
-      unsubscribeOrders()
-    }
+    fetchSchedule()
   }, [])
+
+  const fetchSchedule = async () => {
+    try {
+      const q = query(collection(db, "mealSchedule"))
+      const querySnapshot = await getDocs(q)
+      const scheduleData = {}
+      querySnapshot.forEach((doc) => {
+        const meal = doc.data()
+        if (!scheduleData[meal.day]) {
+          scheduleData[meal.day] = {}
+        }
+        scheduleData[meal.day][meal.type] = { id: doc.id, menu: meal.menu }
+      })
+      setSchedule(scheduleData)
+    } catch (error) {
+      console.error("Error fetching meal schedule:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch meal schedule. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   const handleAddMenuItem = async (e) => {
     e.preventDefault()
@@ -48,6 +56,35 @@ export function MessStaffDashboard() {
         title: "Success",
         description: "Menu item added successfully!",
       })
+
+      // Update the meal schedule if a day and meal type are selected
+      if (newScheduleItem.day && newScheduleItem.type) {
+        const scheduleRef = collection(db, "mealSchedule")
+        const q = query(scheduleRef, where("day", "==", newScheduleItem.day), where("type", "==", newScheduleItem.type))
+        const querySnapshot = await getDocs(q)
+
+        if (querySnapshot.empty) {
+          // Add new schedule item
+          await addDoc(scheduleRef, {
+            day: newScheduleItem.day,
+            type: newScheduleItem.type,
+            menu: newItem.name,
+          })
+        } else {
+          // Update existing schedule item
+          const docRef = doc(db, "mealSchedule", querySnapshot.docs[0].id)
+          await updateDoc(docRef, {
+            menu: querySnapshot.docs[0].data().menu + ", " + newItem.name,
+          })
+        }
+
+        setNewScheduleItem({ day: "", type: "", menu: "" })
+        fetchSchedule()
+        toast({
+          title: "Success",
+          description: "Meal schedule updated successfully!",
+        })
+      }
     } catch (error) {
       console.error("Error adding menu item: ", error)
       toast({
@@ -58,38 +95,8 @@ export function MessStaffDashboard() {
     }
   }
 
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    try {
-      await updateDoc(doc(db, "orders", orderId), {
-        status: newStatus,
-        updatedAt: serverTimestamp(),
-      })
-      toast({
-        title: "Success",
-        description: `Order status updated to ${newStatus}`,
-      })
-    } catch (error) {
-      console.error("Error updating order status: ", error)
-      toast({
-        title: "Error",
-        description: "Failed to update order status. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Mess Staff Dashboard</h1>
-
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Add Menu Item</CardTitle>
@@ -98,72 +105,97 @@ export function MessStaffDashboard() {
           <form onSubmit={handleAddMenuItem} className="space-y-4">
             <Input
               type="text"
-              placeholder="Item Name"
+              placeholder="Menu Item Name"
               value={newItem.name}
               onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-              className="w-full"
-              required
             />
             <Input
               type="number"
               placeholder="Price"
               value={newItem.price}
               onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-              className="w-full"
-              required
             />
-            <Button type="submit">Add Item</Button>
+            <Button type="submit">Add Menu Item</Button>
           </form>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Current Menu</CardTitle>
+          <CardTitle>Update Meal Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.id} className="flex justify-between items-center">
-                <span>{item.name}</span>
-                <span className="text-muted-foreground">₹{item.price.toFixed(2)}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-4">
+            <Select
+              value={newScheduleItem.day}
+              onValueChange={(value) => setNewScheduleItem({ ...newScheduleItem, day: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select day" />
+              </SelectTrigger>
+              <SelectContent>
+                {daysOfWeek.map((day) => (
+                  <SelectItem key={day} value={day}>
+                    {day}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={newScheduleItem.type}
+              onValueChange={(value) => setNewScheduleItem({ ...newScheduleItem, type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select meal type" />
+              </SelectTrigger>
+              <SelectContent>
+                {mealTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Select a day and meal type to update the schedule when adding a new menu item.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Active Orders</CardTitle>
+          <CardTitle>Current Meal Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-4">
-            {orders.map((order) => (
-              <li key={order.id} className="border-b pb-4">
-                <p>
-                  <strong>Order ID:</strong> {order.id}
-                </p>
-                <p>
-                  <strong>Status:</strong> <Badge>{order.status}</Badge>
-                </p>
-                <div className="mt-2 space-x-2">
-                  <Button onClick={() => handleUpdateOrderStatus(order.id, "preparing")} variant="outline" size="sm">
-                    Preparing
-                  </Button>
-                  <Button onClick={() => handleUpdateOrderStatus(order.id, "ready")} variant="outline" size="sm">
-                    Ready
-                  </Button>
-                  <Button onClick={() => handleUpdateOrderStatus(order.id, "delivered")} variant="outline" size="sm">
-                    Delivered
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Day</TableHead>
+                {mealTypes.map((type) => (
+                  <TableHead key={type}>{type}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {daysOfWeek.map((day) => (
+                <TableRow key={day}>
+                  <TableCell>{day}</TableCell>
+                  {mealTypes.map((type) => (
+                    <TableCell key={type}>
+                      {schedule[day] && schedule[day][type] ? (
+                        <span>{schedule[day][type].menu}</span>
+                      ) : (
+                        <span className="text-muted-foreground">Not set</span>
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
   )
 }
-
