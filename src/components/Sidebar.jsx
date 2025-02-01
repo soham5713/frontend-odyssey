@@ -4,7 +4,7 @@ import { ThemeSwitcher } from "./ThemeSwitcher"
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/" },
-  { icon: UtensilsCrossed, label: "Recipes", href: "/recipes" },
+  { icon: UtensilsCrossed, label: "Menu", href: "/recipes" },
   { icon: Coffee, label: "Restaurants", href: "/restaurants" },
   { icon: ShoppingCart, label: "Order Food", href: "/order" },
   { icon: Heart, label: "Favorites", href: "/favorites" },
