@@ -15,6 +15,7 @@ const getMenuItems = (role) => {
         { icon: UtensilsCrossed, label: "Menu", href: "/user-menu" },
         { icon: ShoppingCart, label: "Order Food", href: "/user-order" },
         { icon: DollarSign, label: "Expenses", href: "/user-expenses" },
+        { icon: Calendar, label: "Meal Schedule", href: "/user-meal-schedule" },
       ]
       case "mess_staff":
         return [
@@ -25,7 +26,7 @@ const getMenuItems = (role) => {
         case "admin":
           return [
             ...commonItems,
-            { icon: Calendar, label: "Meal Schedule", href: "/user-meal-schedule" },
+            { icon: Calendar, label: "Meal Schedule", href: "/admin-meal-schedule" },
         { icon: ClipboardList, label: "Manage Users", href: "/admin-users" },
         { icon: UtensilsCrossed, label: "Manage Menu", href: "/admin-menu" },
       ]
