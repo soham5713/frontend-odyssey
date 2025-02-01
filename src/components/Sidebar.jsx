@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Home, UtensilsCrossed, Coffee, ShoppingCart, ClipboardList, UserCog } from "lucide-react"
+import { Home, UtensilsCrossed, Coffee, ShoppingCart, ClipboardList, UserCog, DollarSign } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 
 const getMenuItems = (role) => {
@@ -14,7 +14,7 @@ const getMenuItems = (role) => {
         ...commonItems,
         { icon: UtensilsCrossed, label: "Menu", href: "/user-menu" },
         { icon: ShoppingCart, label: "Order Food", href: "/user-order" },
-        { icon: ClipboardList, label: "Feedback", href: "/user-feedback" },
+        { icon: DollarSign, label: "Expenses", href: "/user-expenses" },
       ]
     case "mess_staff":
       return [
