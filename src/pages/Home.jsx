@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { Search, ArrowRight } from "lucide-react"
 
 export function Home() {
@@ -25,9 +26,9 @@ export function Home() {
             </div>
           ))}
         </div>
-        <a href="/recipes" className="inline-flex items-center text-primary hover:underline">
+        <Link to="/recipes" className="inline-flex items-center text-primary hover:underline">
           View all recipes <ArrowRight className="ml-1 h-4 w-4" />
-        </a>
+        </Link>
       </section>
 
       <section className="space-y-4">
@@ -46,15 +47,20 @@ export function Home() {
             </div>
           ))}
         </div>
-        <a href="/restaurants" className="inline-flex items-center text-primary hover:underline">
+        <Link to="/restaurants" className="inline-flex items-center text-primary hover:underline">
           Explore more restaurants <ArrowRight className="ml-1 h-4 w-4" />
-        </a>
+        </Link>
       </section>
 
       <section className="bg-primary text-primary-foreground p-6 rounded-lg">
         <h2 className="text-2xl font-semibold mb-2">Hungry? Order food now!</h2>
         <p className="mb-4">Get your favorite dishes delivered right to your doorstep.</p>
-        <button className="bg-background text-foreground px-4 py-2 rounded-md hover:bg-secondary">Order Now</button>
+        <Link
+          to="/order"
+          className="bg-background text-foreground px-4 py-2 rounded-md hover:bg-secondary inline-block"
+        >
+          Order Now
+        </Link>
       </section>
     </div>
   )
